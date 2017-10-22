@@ -1,0 +1,77 @@
+package WL_1;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+public class D_Hauptbahnhof 
+{
+	public static void main(String[] args) 
+	{	long startTime = System.currentTimeMillis();	
+     
+     try 
+  	{    
+    	D_Hauptbahnhof.call_me("rbl=115");
+  	} 
+		catch (Exception e) 
+  	{
+		e.printStackTrace();
+  	}
+     	long elapsedTime = System.currentTimeMillis() - startTime;
+     	System.out.println("Total elapsed http request/response time in milliseconds: " + elapsedTime);
+     	
+    }
+	   
+public static void call_me(String RBL) throws Exception 
+   {
+	
+     String url = "http://www.wienerlinien.at/ogd_realtime/monitor?"+RBL+"&sender=Aq5inVKiQsJwRm9c";
+     URL obj = new URL(url);
+     HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+     // optional default is GET
+     con.setRequestMethod("GET");
+     //add request header
+     con.setRequestProperty("User-Agent", "Mozilla/5.0");
+     int responseCode = con.getResponseCode();
+     System.out.println("\nSending 'GET' request to URL : " + url);
+     System.out.println("Response Code : " + responseCode);
+     BufferedReader in = new BufferedReader(
+             new InputStreamReader(con.getInputStream()));
+     String inputLine;
+     StringBuffer response = new StringBuffer();
+     while ((inputLine = in.readLine()) != null) {
+     	response.append(inputLine);
+     }
+     in.close();
+     
+     /* Dieser Abschnitt importiert die JSON Daten von dem URL mit der gegebenen RBL Nummer.
+      * 
+      * Unten definiert ich den neuen String Input als neues JSON Object (data). Innerhalb des data JSON sind zwei Subkategorien. 
+      * monitors (Die Echtzeitdaten, Bahnsteiginfo...)
+      * message (Servertime, Ok)
+      * 
+      * Message als Subobject kann ich problemlos aufrufen. 
+      * Monitors ist allerdings ein Array, und wenn ichs versuche erhalte ich die Fehlermeldung:
+      * 
+      * org.json.JSONException: JSONObject["monitors"] not found.
+		at org.json.JSONObject.get(JSONObject.java:454)
+		at org.json.JSONObject.getJSONArray(JSONObject.java:535)
+		at WL_1.D_Hauptbahnhof.call_me(D_Hauptbahnhof.java:70)
+		at WL_1.D_Hauptbahnhof.main(D_Hauptbahnhof.java:18)
+      */
+     
+     String Input = response.toString();
+     JSONObject data = new JSONObject(Input);
+     System.out.println(data);
+     JSONObject message = data.getJSONObject("message");
+     System.out.println(message);
+     JSONArray monitors = data.getJSONArray("monitors");
+     System.out.println(monitors);
+     
+   }
+
+}
