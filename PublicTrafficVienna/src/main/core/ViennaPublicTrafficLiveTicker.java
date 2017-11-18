@@ -12,9 +12,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+ 
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 
 
 public class ViennaPublicTrafficLiveTicker 
@@ -26,7 +29,6 @@ public class ViennaPublicTrafficLiveTicker
 	public static void main(String[] args) 
 	{
 		long startTime = System.currentTimeMillis();
-		
 		
 	    ViennaPublicTrafficLiveTicker ticker = new ViennaPublicTrafficLiveTicker();
 	    
@@ -78,8 +80,9 @@ public class ViennaPublicTrafficLiveTicker
 			{
 				file.write(responseJsonObject.toString());
 				System.out.println("Successfully Copied JSON Object to File...");
-//				System.out.println("\nJSON Object: " + obj);
-			} catch (Exception e) 
+				
+			} 
+			catch (Exception e) 
 			{
 				e.printStackTrace();
 			}
