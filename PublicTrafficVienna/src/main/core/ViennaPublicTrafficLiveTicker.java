@@ -9,14 +9,19 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-
- 
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.Mongo;
+import com.mongodb.util.JSON;
+
 
 
 
@@ -31,33 +36,18 @@ public class ViennaPublicTrafficLiveTicker
 		long startTime = System.currentTimeMillis();
 		
 	    ViennaPublicTrafficLiveTicker ticker = new ViennaPublicTrafficLiveTicker();
-	    
-	    
-		//ticker.run(115);
-		
-//		ticker.runSingle(115);
+
+//	    ticker.runSingle(115);
 	    ticker.runAll(0, 8499);
-		
-		
-		
+				
 		long elapsedTime = System.currentTimeMillis() - startTime;
 		System.out.println("Total elapsed http request/response time in milliseconds: " + elapsedTime);
 
 	}
-//	private void runAll(Integer rbl) {
-//		
-//		//TODO load valid rbls
-//		
-//		//TODO loop runSingle
-//		
-//		//TODO save
-//		
-//		
-//	}
 
+	@SuppressWarnings("deprecation")
 	private void runAll(int start, int end)
 	{
-		
 		try 
 		{
 			List<String> responseJsonMessagelist = loadRealtimeData_all(start,end);
@@ -75,17 +65,38 @@ public class ViennaPublicTrafficLiveTicker
 			System.out.println("meta data of the request value="+messageValue+"; messageCode="+messageCode+", messageServerTime="+messageServerTime);
 			
 			JSONObject data = responseJsonObject.getJSONObject("data");
+			JSONArray monitorsDetails = (JSONArray) data.get("monitors");
 			
-			try (FileWriter file = new FileWriter("C:/Users/Raphael/Desktop/FH/Master/Data/Datafile"+i+".txt")) 
+			for (int j = 0; j < monitorsDetails.length(); ++j) 
 			{
-				file.write(responseJsonObject.toString());
-				System.out.println("Successfully Copied JSON Object to File...");
+			    JSONObject monitor_single = monitorsDetails.getJSONObject(j);
+			    monitor_single.put("serverTime", messageServerTime);
+			    
+			    
+			    Mongo mongo = new Mongo("localhost", 27017);
+				DB db = mongo.getDB("Wiener_Linien");
+				DBCollection collection = db.getCollection("DATA");
+
+				// convert JSON to DBObject directly
+				DBObject dbObject = (DBObject) JSON.parse(monitor_single.toString());
+
+				collection.insert(dbObject);
 				
-			} 
-			catch (Exception e) 
-			{
-				e.printStackTrace();
 			}
+			
+			
+			
+			
+//			try (FileWriter file = new FileWriter("C:/Users/Raphael/Desktop/FH/Master/Data/Datafile"+i+".txt")) 
+//			{
+//				file.write(responseJsonObject.toString());
+//				System.out.println("Successfully Copied JSON Object to File...");
+//				
+//			} 
+//			catch (Exception e) 
+//			{
+//				e.printStackTrace();
+//			}
 			
 //			System.out.println(data);
 
@@ -174,15 +185,11 @@ public class ViennaPublicTrafficLiveTicker
 		String finalURL = String.format(REQUEST_URL_All, rbltext);
 		URLarray.add(finalURL);
 		start++;
-//		System.out.println(finalURL);
 		}
-		
-		
-		
-		
 		
 		return URLarray;
 	}
+	@SuppressWarnings("deprecation")
 	private void runSingle(Integer rbl) 
 	{
 		try 
@@ -197,9 +204,7 @@ public class ViennaPublicTrafficLiveTicker
 			String messageServerTime  = (String) message.get("serverTime");
 			System.out.println("meta data of the request value="+messageValue+"; messageCode="+messageCode+", messageServerTime="+messageServerTime);
 			
-			
 			JSONObject data = responseJsonObject.getJSONObject("data");
-			
 			/*
 			System.out.println(data);
 			Iterator<String> itr = message.keys();
@@ -219,24 +224,34 @@ public class ViennaPublicTrafficLiveTicker
 			JSONArray monitorsDetails = (JSONArray) data.get("monitors");
 			for (int i = 0; i < monitorsDetails.length(); ++i) 
 			{
-			    JSONObject rec = monitorsDetails.getJSONObject(i);
-			    JSONObject locationStopDetails = rec.getJSONObject("locationStop");
-			    System.out.println("geometry -->"+locationStopDetails.get("geometry"));
+			    JSONObject monitor_single = monitorsDetails.getJSONObject(i);
+			    monitor_single.put("serverTime", messageServerTime);
 			    
-			    JSONArray jsonLines = rec.getJSONArray("lines");
-			    for (int j = 0; j < jsonLines.length(); ++j) 
-			    {
-			    	String jsonLineName = (String)jsonLines.getJSONObject(j).get("name");
-			    	System.out.println("lineName-->"+jsonLineName);
-			    }
+			    
+			    Mongo mongo = new Mongo("localhost", 27017);
+				DB db = mongo.getDB("Wiener_Linien");
+				DBCollection collection = db.getCollection("DATA");
+
+				// convert JSON to DBObject directly
+				DBObject dbObject = (DBObject) JSON.parse(monitor_single.toString());
+
+				collection.insert(dbObject);
+				
+				
+			    
+//			    JSONObject locationStopDetails = monitor_single.getJSONObject("locationStop");
+//			    System.out.println("geometry -->"+locationStopDetails.get("geometry"));
+			    
+//			    JSONArray jsonLines = monitor_single.getJSONArray("lines");
+//			    for (int j = 0; j < jsonLines.length(); ++j) 
+//			    {
+//			    	String jsonLineName = (String)jsonLines.getJSONObject(j).get("name");
+//			    	System.out.println("lineName-->"+jsonLineName);
+//			    }
 			}
 			
-			//String csv = CDL.toString(monitorsDetails);
-			//System.out.println(csv);
-			
-			
-			
-		} 
+		
+			} 
 		catch (MalformedURLException e) 
 		{
 			e.printStackTrace();
