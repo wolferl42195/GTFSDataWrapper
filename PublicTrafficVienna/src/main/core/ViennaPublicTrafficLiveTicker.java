@@ -10,6 +10,7 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,17 +29,23 @@ import com.mongodb.util.JSON;
 public class ViennaPublicTrafficLiveTicker 
 {
 
-	private String REQUEST_URL_Single = "http://www.wienerlinien.at/ogd_realtime/monitor?rbl=%d&sender=Aq5inVKiQsJwRm9c";
-	private String REQUEST_URL_All = "http://www.wienerlinien.at/ogd_realtime/monitor?%s&sender=Aq5inVKiQsJwRm9c";
+	private String REQUEST_URL_Single = "http://www.wienerlinien.at/ogd_realtime/monitor?rbl=%d&sender=nFTMbBjYEHbCMKSv";
+	private String REQUEST_URL_All = "http://www.wienerlinien.at/ogd_realtime/monitor?%s&sender=nFTMbBjYEHbCMKSv";
 	
-	public static void main(String[] args) 
+	public static void main(String[] args) throws InterruptedException 
 	{
+		boolean test = true;
 		long startTime = System.currentTimeMillis();
 		
 	    ViennaPublicTrafficLiveTicker ticker = new ViennaPublicTrafficLiveTicker();
-
-//	    ticker.runSingle(115);
+while(test) {
 	    ticker.runAll(0, 8499);
+	    System.out.println("Waiting for next request...");
+	    TimeUnit.SECONDS.sleep(15);
+	   
+}
+//	    ticker.runSingle(115);
+//	    
 				
 		long elapsedTime = System.currentTimeMillis() - startTime;
 		System.out.println("Total elapsed http request/response time in milliseconds: " + elapsedTime);
