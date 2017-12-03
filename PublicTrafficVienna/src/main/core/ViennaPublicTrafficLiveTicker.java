@@ -21,6 +21,8 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.util.JSON;
 
 
@@ -38,10 +40,14 @@ public class ViennaPublicTrafficLiveTicker
 		long startTime = System.currentTimeMillis();
 		
 	    ViennaPublicTrafficLiveTicker ticker = new ViennaPublicTrafficLiveTicker();
+	    Mongo mongo = new Mongo("localhost", 27017);
+		DB db = mongo.getDB("Wiener_Linien");
+		DBCollection collection = db.getCollection("DATA2");
 while(test) {
-	    ticker.runAll(0, 8499);
+	    ticker.runAll(0, 8499, collection);
 	    System.out.println("Waiting for next request...");
-	    TimeUnit.SECONDS.sleep(15);
+	    
+	    TimeUnit.SECONDS.sleep(30);
 	   
 }
 //	    ticker.runSingle(115);
@@ -53,7 +59,7 @@ while(test) {
 	}
 
 	@SuppressWarnings("deprecation")
-	private void runAll(int start, int end)
+	private void runAll(int start, int end,DBCollection collection)
 	{
 		try 
 		{
@@ -80,9 +86,7 @@ while(test) {
 			    monitor_single.put("serverTime", messageServerTime);
 			    
 			    
-			    Mongo mongo = new Mongo("localhost", 27017);
-				DB db = mongo.getDB("Wiener_Linien");
-				DBCollection collection = db.getCollection("DATA");
+			    
 
 				// convert JSON to DBObject directly
 				DBObject dbObject = (DBObject) JSON.parse(monitor_single.toString());
@@ -124,6 +128,8 @@ while(test) {
 //			}
 					
 			}
+			
+			
 		}
 		catch (MalformedURLException e) 
 		{
