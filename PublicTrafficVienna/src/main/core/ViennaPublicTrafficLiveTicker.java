@@ -10,6 +10,7 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -20,6 +21,8 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.util.JSON;
 
 
@@ -28,17 +31,27 @@ import com.mongodb.util.JSON;
 public class ViennaPublicTrafficLiveTicker 
 {
 
-	private String REQUEST_URL_Single = "http://www.wienerlinien.at/ogd_realtime/monitor?rbl=%d&sender=Aq5inVKiQsJwRm9c";
-	private String REQUEST_URL_All = "http://www.wienerlinien.at/ogd_realtime/monitor?%s&sender=Aq5inVKiQsJwRm9c";
+	private String REQUEST_URL_Single = "http://www.wienerlinien.at/ogd_realtime/monitor?rbl=%d&sender=nFTMbBjYEHbCMKSv";
+	private String REQUEST_URL_All = "http://www.wienerlinien.at/ogd_realtime/monitor?%s&sender=nFTMbBjYEHbCMKSv";
 	
-	public static void main(String[] args) 
+	public static void main(String[] args) throws InterruptedException 
 	{
+		boolean test = true;
 		long startTime = System.currentTimeMillis();
 		
 	    ViennaPublicTrafficLiveTicker ticker = new ViennaPublicTrafficLiveTicker();
-
+	    Mongo mongo = new Mongo("localhost", 27017);
+		DB db = mongo.getDB("Wiener_Linien");
+		DBCollection collection = db.getCollection("DATA3");
+while(test) {
+	    ticker.runAll(0, 8499, collection);
+	    System.out.println("Waiting for next request...");
+	    
+	    TimeUnit.SECONDS.sleep(30);
+	   
+}
 //	    ticker.runSingle(115);
-	    ticker.runAll(0, 8499);
+//	    
 				
 		long elapsedTime = System.currentTimeMillis() - startTime;
 		System.out.println("Total elapsed http request/response time in milliseconds: " + elapsedTime);
@@ -46,7 +59,7 @@ public class ViennaPublicTrafficLiveTicker
 	}
 
 	@SuppressWarnings("deprecation")
-	private void runAll(int start, int end)
+	private void runAll(int start, int end,DBCollection collection)
 	{
 		try 
 		{
@@ -73,9 +86,7 @@ public class ViennaPublicTrafficLiveTicker
 			    monitor_single.put("serverTime", messageServerTime);
 			    
 			    
-			    Mongo mongo = new Mongo("localhost", 27017);
-				DB db = mongo.getDB("Wiener_Linien");
-				DBCollection collection = db.getCollection("DATA");
+			    
 
 				// convert JSON to DBObject directly
 				DBObject dbObject = (DBObject) JSON.parse(monitor_single.toString());
@@ -117,6 +128,8 @@ public class ViennaPublicTrafficLiveTicker
 //			}
 					
 			}
+			
+			
 		}
 		catch (MalformedURLException e) 
 		{
