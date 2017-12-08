@@ -43,8 +43,12 @@ public class ViennaPublicTrafficLiveTicker {
 		DBCollection collectionTraffic = db.getCollection("TrafficData");
 
 		while (test) {
-
+			ticker.runAll(0, 8499, collection);
 			ticker.loadRealtimeTrafficDataList(collectionTraffic);
+			System.out.println("Waiting for next request...");
+
+			TimeUnit.SECONDS.sleep(30);
+			
 			for (int i = 0; i < 100; i++) {
 				ticker.runAll(0, 8499, collection);
 				System.out.println("Waiting for next request...");
