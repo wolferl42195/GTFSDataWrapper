@@ -29,7 +29,7 @@ public class ViennaPublicTrafficLiveTicker {
 
 	private String REQUEST_URL_Single = "http://www.wienerlinien.at/ogd_realtime/monitor?rbl=%d&sender=nFTMbBjYEHbCMKSv";
 	private String REQUEST_URL_All = "http://www.wienerlinien.at/ogd_realtime/monitor?%s&sender=nFTMbBjYEHbCMKSv";
-	private String REQUEST_URL_News = "http://www.wienerlinien.at/ogd_realtime/NewsList?sender=nFTMbBjYEHbCMKSv";
+	private String REQUEST_URL_News = "http://www.wienerlinien.at/ogd_realtime/newsList?sender=nFTMbBjYEHbCMKSv";
 	private String REQUEST_URL_Traffic = "http://www.wienerlinien.at/ogd_realtime/trafficInfoList?sender=nFTMbBjYEHbCMKSv";
 	private String trafficMessageServerTime = "";
 
@@ -260,6 +260,7 @@ public class ViennaPublicTrafficLiveTicker {
 
 		trafficData.put("serverTime", messageServerTime);
 
+		System.out.println("saving traffic data to database collection");
 		// convert JSON to DBObject directly
 		DBObject dbObject = (DBObject) JSON.parse(trafficData.toString());
 		collectionTraffic.insert(dbObject);
@@ -275,7 +276,7 @@ public class ViennaPublicTrafficLiveTicker {
 		con.setRequestMethod("GET");
 		con.setRequestProperty("User-Agent", "Mozilla/5.0");
 		int responseCode = con.getResponseCode();
-		System.out.println("\nSending 'GET' request to URL : " + REQUEST_URL_Traffic);
+		System.out.println("\nSending 'GET' request to URL : " + REQUEST_URL_News);
 		System.out.println("Response Code : " + responseCode);
 		BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
 		String inputLine;
@@ -293,6 +294,7 @@ public class ViennaPublicTrafficLiveTicker {
 
 		newsData.put("serverTime", messageServerTime);
 
+		System.out.println("saving news data to database collection");
 		// convert JSON to DBObject directly
 		DBObject dbObject = (DBObject) JSON.parse(newsData.toString());
 		collectionNews.insert(dbObject);
