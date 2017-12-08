@@ -29,6 +29,7 @@ public class ViennaPublicTrafficLiveTicker {
 
 	private String REQUEST_URL_Single = "http://www.wienerlinien.at/ogd_realtime/monitor?rbl=%d&sender=nFTMbBjYEHbCMKSv";
 	private String REQUEST_URL_All = "http://www.wienerlinien.at/ogd_realtime/monitor?%s&sender=nFTMbBjYEHbCMKSv";
+	private String REQUEST_URL_News = "http://www.wienerlinien.at/ogd_realtime/NewsList?sender=nFTMbBjYEHbCMKSv";
 	private String REQUEST_URL_Traffic = "http://www.wienerlinien.at/ogd_realtime/trafficInfoList?sender=nFTMbBjYEHbCMKSv";
 	private String trafficMessageServerTime = "";
 
@@ -41,8 +42,17 @@ public class ViennaPublicTrafficLiveTicker {
 		DB db = mongo.getDB("Wiener_Linien");
 		DBCollection collection = db.getCollection("DATA3");
 		DBCollection collectionTraffic = db.getCollection("TrafficData");
+		DBCollection collectionNews = db.getCollection("NewsData");
 
 		while (test) {
+			
+			ticker.runAll(0, 8499, collection);
+			ticker.loadRealtimeNewsDataList(collectionNews);
+			System.out.println("Waiting for next request...");
+
+			TimeUnit.SECONDS.sleep(30);
+			
+			for (int j = 0; j < 12; j++) {
 			ticker.runAll(0, 8499, collection);
 			ticker.loadRealtimeTrafficDataList(collectionTraffic);
 			System.out.println("Waiting for next request...");
@@ -54,6 +64,8 @@ public class ViennaPublicTrafficLiveTicker {
 				System.out.println("Waiting for next request...");
 
 				TimeUnit.SECONDS.sleep(30);
+			}
+			
 			}
 		}
 
@@ -251,6 +263,39 @@ public class ViennaPublicTrafficLiveTicker {
 		// convert JSON to DBObject directly
 		DBObject dbObject = (DBObject) JSON.parse(trafficData.toString());
 		collectionTraffic.insert(dbObject);
+
+	}
+	
+	private void loadRealtimeNewsDataList(DBCollection collectionNews) throws IOException, JSONException {
+
+		String messageServerTime = trafficMessageServerTime;
+		
+		URL obj = new URL(REQUEST_URL_News);
+		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+		con.setRequestMethod("GET");
+		con.setRequestProperty("User-Agent", "Mozilla/5.0");
+		int responseCode = con.getResponseCode();
+		System.out.println("\nSending 'GET' request to URL : " + REQUEST_URL_Traffic);
+		System.out.println("Response Code : " + responseCode);
+		BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuffer response = new StringBuffer();
+		while ((inputLine = in.readLine()) != null) {
+			response.append(inputLine);
+		}
+		in.close();
+
+		String newsInfoList = response.toString();
+
+		JSONObject responseJsonObject = new JSONObject(newsInfoList);
+		JSONObject newsData = responseJsonObject.getJSONObject("data");
+		// MetaData of the request
+
+		newsData.put("serverTime", messageServerTime);
+
+		// convert JSON to DBObject directly
+		DBObject dbObject = (DBObject) JSON.parse(newsData.toString());
+		collectionNews.insert(dbObject);
 
 	}
 
