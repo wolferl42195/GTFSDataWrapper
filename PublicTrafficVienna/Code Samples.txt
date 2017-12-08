@@ -1,0 +1,46 @@
+// The following code saves the data locally as a txt file.
+
+try (FileWriter file = new FileWriter("C:/Users/Raphael/Desktop/FH/Master/Data/Datafile"+i+".txt")) 
+			{
+				file.write(responseJsonObject.toString());
+				System.out.println("Successfully Copied JSON Object to File...");
+				
+			} 
+			catch (Exception e) 
+			{
+				e.printStackTrace();
+			}
+			
+			System.out.println(data);
+
+			JSONArray monitors = data.getJSONArray("monitors");
+			
+			for (int j = 0; j < monitors.length(); ++j) 
+			{
+			    JSONObject rec = monitors.getJSONObject(j);
+			    JSONObject locationStopDetails = rec.getJSONObject("locationStop");
+			    System.out.println("geometry -->"+locationStopDetails.get("geometry"));
+			    
+			    JSONArray jsonLines = rec.getJSONArray("lines");
+			    for (int k = 0; k < jsonLines.length(); ++k) 
+			    {
+			    	String jsonLineName = (String)jsonLines.getJSONObject(k).get("name");
+			    	System.out.println("lineName-->"+jsonLineName);
+			    }
+			}
+			
+//	the following code sample runs through json objects and prints underlying attributes.
+
+System.out.println(data);
+			Iterator<String> itr = message.keys();
+			while(itr.hasNext()) {
+				Object element = itr.next();
+				System.out.println("message --> "+element);
+			}
+			itr = data.keys();
+			while(itr.hasNext()) {
+				Object element = itr.next();
+				System.out.println("data --> "+element);
+			}
+			System.out.println("");
+			System.out.println("");
