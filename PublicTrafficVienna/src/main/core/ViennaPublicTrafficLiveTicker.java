@@ -32,7 +32,7 @@ public class ViennaPublicTrafficLiveTicker {
 	private String REQUEST_URL_Traffic = "http://www.wienerlinien.at/ogd_realtime/trafficInfoList?sender=nFTMbBjYEHbCMKSv";
 	private String trafficMessageServerTime = "";
 
-	public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args) throws InterruptedException, IOException, JSONException {
 		boolean test = true;
 		long startTime = System.currentTimeMillis();
 
@@ -217,7 +217,7 @@ public class ViennaPublicTrafficLiveTicker {
 		return finalUrl;
 	}
 
-	private void loadRealtimeTrafficDataList(DBCollection collectionTraffic) throws IOException {
+	private void loadRealtimeTrafficDataList(DBCollection collectionTraffic) throws IOException, JSONException {
 
 		String messageServerTime = trafficMessageServerTime;
 		
