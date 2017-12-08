@@ -29,6 +29,8 @@ public class ViennaPublicTrafficLiveTicker {
 
 	private String REQUEST_URL_Single = "http://www.wienerlinien.at/ogd_realtime/monitor?rbl=%d&sender=nFTMbBjYEHbCMKSv";
 	private String REQUEST_URL_All = "http://www.wienerlinien.at/ogd_realtime/monitor?%s&sender=nFTMbBjYEHbCMKSv";
+	private String REQUEST_URL_Traffic = "http://www.wienerlinien.at/ogd_realtime/trafficInfoList?sender=nFTMbBjYEHbCMKSv";
+	private String trafficMessageServerTime = "";
 
 	public static void main(String[] args) throws InterruptedException {
 		boolean test = true;
@@ -38,13 +40,17 @@ public class ViennaPublicTrafficLiveTicker {
 		Mongo mongo = new Mongo("localhost", 27017);
 		DB db = mongo.getDB("Wiener_Linien");
 		DBCollection collection = db.getCollection("DATA3");
+		DBCollection collectionTraffic = db.getCollection("TrafficData");
 
 		while (test) {
-			ticker.runAll(0, 8499, collection);
-			System.out.println("Waiting for next request...");
 
-			TimeUnit.SECONDS.sleep(30);
+			ticker.loadRealtimeTrafficDataList(collectionTraffic);
+			for (int i = 0; i < 100; i++) {
+				ticker.runAll(0, 8499, collection);
+				System.out.println("Waiting for next request...");
 
+				TimeUnit.SECONDS.sleep(30);
+			}
 		}
 
 		long elapsedTime = System.currentTimeMillis() - startTime;
@@ -56,16 +62,18 @@ public class ViennaPublicTrafficLiveTicker {
 	private void runAll(int start, int end, DBCollection collection) {
 		try {
 			List<String> responseJsonMessagelist = loadRealtimeData_all(start, end);
-
+			String messageServerTime = "";
+			Integer messageCode = null;
+			String messageValue = "";
 			for (int i = 0; i < responseJsonMessagelist.size(); ++i) {
 
 				String responseJsonMessage = responseJsonMessagelist.get(i);
 				JSONObject responseJsonObject = new JSONObject(responseJsonMessage);
 				JSONObject message = responseJsonObject.getJSONObject("message");
 				// MetaData of the request
-				String messageValue = (String) message.get("value");
-				Integer messageCode = (Integer) message.get("messageCode");
-				String messageServerTime = (String) message.get("serverTime");
+				messageValue = (String) message.get("value");
+				messageCode = (Integer) message.get("messageCode");
+				messageServerTime = (String) message.get("serverTime");
 				System.out.println("meta data of the request value=" + messageValue + "; messageCode=" + messageCode
 						+ ", messageServerTime=" + messageServerTime);
 
@@ -84,6 +92,7 @@ public class ViennaPublicTrafficLiveTicker {
 				}
 
 			}
+			trafficMessageServerTime = messageServerTime;
 
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
@@ -207,4 +216,38 @@ public class ViennaPublicTrafficLiveTicker {
 		String finalUrl = String.format(REQUEST_URL_Single, rbl);
 		return finalUrl;
 	}
+
+	private void loadRealtimeTrafficDataList(DBCollection collectionTraffic) throws IOException {
+
+		String messageServerTime = trafficMessageServerTime;
+		
+		URL obj = new URL(REQUEST_URL_Traffic);
+		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+		con.setRequestMethod("GET");
+		con.setRequestProperty("User-Agent", "Mozilla/5.0");
+		int responseCode = con.getResponseCode();
+		System.out.println("\nSending 'GET' request to URL : " + REQUEST_URL_Traffic);
+		System.out.println("Response Code : " + responseCode);
+		BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuffer response = new StringBuffer();
+		while ((inputLine = in.readLine()) != null) {
+			response.append(inputLine);
+		}
+		in.close();
+
+		String trafficInfoList = response.toString();
+
+		JSONObject responseJsonObject = new JSONObject(trafficInfoList);
+		JSONObject trafficData = responseJsonObject.getJSONObject("data");
+		// MetaData of the request
+
+		trafficData.put("serverTime", messageServerTime);
+
+		// convert JSON to DBObject directly
+		DBObject dbObject = (DBObject) JSON.parse(trafficData.toString());
+		collectionTraffic.insert(dbObject);
+
+	}
+
 }
