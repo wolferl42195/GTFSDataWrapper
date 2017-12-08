@@ -42,7 +42,7 @@ public class ViennaPublicTrafficLiveTicker
 	    ViennaPublicTrafficLiveTicker ticker = new ViennaPublicTrafficLiveTicker();
 	    Mongo mongo = new Mongo("localhost", 27017);
 		DB db = mongo.getDB("Wiener_Linien");
-		DBCollection collection = db.getCollection("DATA2");
+		DBCollection collection = db.getCollection("DATA3");
 while(test) {
 	    ticker.runAll(0, 8499, collection);
 	    System.out.println("Waiting for next request...");
